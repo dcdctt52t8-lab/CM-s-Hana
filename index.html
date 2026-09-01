@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>장래예상소득 계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #16233F;
+    --navy-soft: #223257;
+    --paper: #EFEEE7;
+    --paper-line: #D9D6C9;
+    --gold: #B4922E;
+    --gold-soft: #E7DDBB;
+    --ink: #1B1B18;
+    --ink-mute: #5C5A50;
+    --good: #1E5E45;
+    --bad: #8C2E2E;
+    --white: #FBFAF6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height:1.55;
+    padding: 40px 16px 64px;
+  }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  header{
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  .kicker{
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight: 700;
+    font-size: 30px;
+    margin: 0 0 8px;
+    color: var(--navy);
+  }
+  .sub{
+    color: var(--ink-mute);
+    font-size: 14.5px;
+    max-width: 60ch;
+  }
+  .card{
+    background: var(--white);
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 28px 28px 24px;
+    margin-bottom: 24px;
+  }
+  .field{
+    display:grid;
+    grid-template-columns: 130px 1fr;
+    align-items:center;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .field:last-child{border-bottom:none;}
+  .field label{
+    font-weight: 700;
+    color: var(--navy);
+    font-size: 14.5px;
+  }
+  .field .hint{
+    display:block;
+    font-weight: 400;
+    color: var(--ink-mute);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .input-row{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  input[type="number"]{
+    width: 100%;
+    font-size: 16px;
+    font-family:'Noto Sans KR', sans-serif;
+    padding: 10px 12px;
+    border: 1px solid #C7C3B4;
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  input[type="number"]:focus{
+    outline: none;
+    border-color: var(--navy);
+    background: var(--white);
+  }
+  .unit{
+    font-size: 13px;
+    color: var(--ink-mute);
+    white-space: nowrap;
+    min-width: 34px;
+  }
+  .results{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  @media (max-width: 560px){
+    .results{grid-template-columns: 1fr;}
+    .field{grid-template-columns: 1fr; gap: 6px;}
+  }
+  .result-card{
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 4px;
+    padding: 20px 20px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card.alt{
+    background: var(--navy-soft);
+  }
+  .result-card .cap{
+    font-size: 12px;
+    color: var(--gold-soft);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .result-card .type-name{
+    font-family:'Noto Serif KR', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .result-card .amount{
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-card .amount.na{
+    font-size: 18px;
+    color: #E3B7B7;
+  }
+  .result-card .detail{
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #C7CEDE;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding-top: 10px;
+  }
+  .result-card .detail b{ color: var(--gold-soft); font-weight: 700; }
+  .status{
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink-mute);
+    min-height: 18px;
+  }
+  .status.warn{ color: var(--bad); font-weight: 500; }
+  details{
+    background: var(--white);
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 4px 20px;
+    margin-bottom: 14px;
+  }
+  summary{
+    cursor: pointer;
+    padding: 14px 0;
+    font-weight: 700;
+    color: var(--navy);
+    font-size: 14px;
+    list-style: none;
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary::before{
+    content: "▸ ";
+    color: var(--gold);
+  }
+  details[open] summary::before{ content: "▾ "; }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-bottom: 18px;
+  }
+  th, td{
+    border: 1px solid var(--paper-line);
+    padding: 7px 8px;
+    text-align: center;
+  }
+  th{
+    background: var(--paper);
+    color: var(--navy);
+    font-weight: 700;
+  }
+  td.active{
+    background: var(--gold-soft);
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .notes{
+    font-size: 12.5px;
+    color: var(--ink-mute);
+    padding-left: 18px;
+    margin: 0 0 14px;
+  }
+  .notes li{ margin-bottom: 4px; }
+  footer{
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    text-align: center;
+    margin-top: 28px;
+    opacity: 0.75;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">8·13 금융종합대책</div>
+    <h1>장래예상소득 계산기</h1>
+    <div class="sub">나이·대출기간·현재 소득을 입력하면, 고용노동통계 평균소득 증가율을 반영한 장래예상소득을 일반형과 신혼부부/청년형 기준으로 함께 계산합니다.</div>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label for="age">나이<span class="hint">만 나이, 20~64세</span></label>
+      <div class="input-row">
+        <input type="number" id="age" min="20" max="64" placeholder="예: 32">
+        <span class="unit">세</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="period">대출기간<span class="hint">개월 수로 입력</span></label>
+      <div class="input-row">
+        <input type="number" id="period" min="1" placeholder="예: 240">
+        <span class="unit">개월</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="income">소득금액<span class="hint">연 소득, 원 단위</span></label>
+      <div class="input-row">
+        <input type="number" id="income" min="0" placeholder="예: 45000000">
+        <span class="unit">원</span>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="results">
+    <div class="result-card">
+      <div class="cap">최대 10% 적용</div>
+      <div class="type-name">일반형</div>
+      <div class="amount" id="result-general">-</div>
+      <div class="detail" id="detail-general"></div>
+    </div>
+    <div class="result-card alt">
+      <div class="cap">최대 20% 적용</div>
+      <div class="type-name">신혼부부 / 청년</div>
+      <div class="amount" id="result-young">-</div>
+      <div class="detail" id="detail-young"></div>
+    </div>
+  </div>
+
+  <details style="margin-top:24px;">
+    <summary>참고 · 연령·기간별 평균소득 증가율표</summary>
+    <table>
+      <thead>
+        <tr>
+          <th>시작연령</th><th>종료연령</th>
+          <th>180개월 미만</th><th>240개월 미만</th>
+          <th>대출기간 360개월 미만</th><th>대출기간 360개월 이상(30년)</th>
+        </tr>
+      </thead>
+      <tbody id="rate-table"></tbody>
+    </table>
+    <p style="font-size:12px;color:var(--ink-mute);margin:0 0 4px;">* 2025년 [고용노동통계_월급여액] 평균소득 증가율. -100은 장래예상소득 반영이 불가함을 의미합니다.</p>
+    <p style="font-size:12px;color:var(--bad);margin:0 0 4px;">* 마지막 구간은 "60~99세"로 표기되어 있지만, 원본 서식의 조회 수식은 5세 단위로만 행을 이동하도록 되어 있어 실제로는 60~64세까지만 정상 계산됩니다. 65세 이상을 입력하면 원본 엑셀에서도 참조 오류(#REF!)가 발생합니다.</p>
+  </details>
+
+  <details>
+    <summary>참고 · 적용대상</summary>
+    <ul class="notes">
+      <li>주택구입자금</li>
+      <li>무주택 근로자 (신청시점 무주택자로, 처분조건은 대상 아님 / 강화된 규정 적용불가 — 세대원 조회 생략)</li>
+      <li>주택자금대출로서 만기 10년 이상 비거치식(12개월 거치) 분할상환대출</li>
+      <li>CB개인신용평점 655점(KCB와 NICE 중 낮은 평점) 이상</li>
+      <li>배우자 소득합산 시 차주 기준의 나이로 계산되며, 배우자는 신혼부부/청년 적용 불가</li>
+      <li>청년층은 만 40세 미만, 신혼부부는 혼인기간 5년 이내</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>참고 · 장래예상소득인정 기준 (내규 LD 3.6.2 변경 예정)</summary>
+    <p style="font-size:12.5px;color:var(--ink);margin:0 0 10px;">주택담보대출로서 다음 각호를 모두 충족하는 경우 적용 가능</p>
+    <ul class="notes">
+      <li>① 주택구입자금대출로 만기 10년 이상 비거치식 분할상환대출</li>
+      <li>② CB개인신용평점 655점(NICE와 KCB 중 낮은 평점) 이상</li>
+      <li>③ 대출신청일 기준 무주택 근로자(3개월 이상 소득증빙 대상자)</li>
+    </ul>
+    <p style="font-size:12px;color:var(--ink-mute);margin:0 0 4px;">* 소득 확인방법(서류)은 내규 LD 3.6.2의 근로소득 확인방법에 따릅니다.</p>
+  </details>
+
+  <footer>원본 서식(8·13금융종합대책_장래예상소득계산기)의 계산식을 그대로 반영했습니다. 실제 대출 심사 결과는 취급 금융기관 안내를 따릅니다.</footer>
+</div>
+
+<script>
+const TABLE = [
+  // [180개월미만, 240개월미만, 360개월미만, 360개월이상]
+  {from:20, to:24, rates:[23.3, 34.3, 43.3, 54.3]},
+  {from:25, to:29, rates:[16.5, 23.2, 28,   30.8]},
+  {from:30, to:34, rates:[13.1, 16.6, 18.8, 13]},
+  {from:35, to:39, rates:[5.7,  6.1,  4.7,  -100]},
+  {from:40, to:44, rates:[0.8,  -100, -100, -100]},
+  {from:45, to:49, rates:[-100, -100, -100, -100]},
+  {from:50, to:54, rates:[-100, -100, -100, -100]},
+  {from:55, to:59, rates:[-100, -100, -100, -100]},
+  {from:60, to:99, rates:[-100, -100, -100, -100]},
+];
+const COL_LABELS = ["180개월 미만","240개월 미만","360개월 미만","360개월 이상(30년)"];
+
+function renderTable(activeRow, activeCol){
+  const tbody = document.getElementById('rate-table');
+  tbody.innerHTML = TABLE.map((row, i) => {
+    const cells = row.rates.map((r, j) => {
+      const isActive = (i === activeRow && j === activeCol);
+      const display = r === -100 ? '대상아님' : r.toFixed(1);
+      return `<td class="${isActive ? 'active' : ''}">${display}</td>`;
+    }).join('');
+    return `<tr><td>${row.from}</td><td>${row.to}</td>${cells}</tr>`;
+  }).join('');
+}
+renderTable(-1, -1);
+
+function colIndex(period){
+  if (period < 180) return 0;
+  if (period < 240) return 1;
+  if (period < 360) return 2;
+  return 3;
+}
+
+function rowIndex(age){
+  const idx = Math.floor((age - 20) / 5);
+  if (idx < 0 || idx > TABLE.length - 1) return -1;
+  return idx;
+}
+
+function formatWon(n){
+  return Math.round(n).toLocaleString('ko-KR') + ' 원';
+}
+
+function calculate(){
+  const ageEl = document.getElementById('age');
+  const periodEl = document.getElementById('period');
+  const incomeEl = document.getElementById('income');
+  const statusEl = document.getElementById('status');
+
+  const resGeneral = document.getElementById('result-general');
+  const resYoung = document.getElementById('result-young');
+  const detGeneral = document.getElementById('detail-general');
+  const detYoung = document.getElementById('detail-young');
+
+  const age = parseFloat(ageEl.value);
+  const period = parseFloat(periodEl.value);
+  const income = parseFloat(incomeEl.value);
+
+  if (isNaN(age) || isNaN(period) || isNaN(income)){
+    statusEl.textContent = '나이, 대출기간, 소득금액을 모두 입력하면 자동으로 계산됩니다.';
+    statusEl.className = 'status';
+    resGeneral.textContent = '-'; resGeneral.classList.remove('na');
+    resYoung.textContent = '-'; resYoung.classList.remove('na');
+    detGeneral.textContent = ''; detYoung.textContent = '';
+    renderTable(-1, -1);
+    return;
+  }
+
+  const rIdx = rowIndex(age);
+  const cIdx = colIndex(period);
+
+  if (rIdx === -1){
+    statusEl.textContent = '나이는 20세 이상 64세 이하 범위에서 입력해 주세요. (65세 이상은 원본 서식 수식에서도 오류가 발생하는 범위입니다)';
+    statusEl.className = 'status warn';
+    resGeneral.textContent = '-'; resGeneral.classList.remove('na');
+    resYoung.textContent = '-'; resYoung.classList.remove('na');
+    detGeneral.textContent = ''; detYoung.textContent = '';
+    renderTable(-1, -1);
+    return;
+  }
+
+  statusEl.textContent = '';
+  statusEl.className = 'status';
+  renderTable(rIdx, cIdx);
+
+  const rate = TABLE[rIdx].rates[cIdx];
+  const bracketLabel = `${TABLE[rIdx].from}~${TABLE[rIdx].to}세 · ${COL_LABELS[cIdx]}`;
+
+  if (rate === -100){
+    resGeneral.textContent = '대상아님';
+    resGeneral.classList.add('na');
+    resYoung.textContent = '대상아님';
+    resYoung.classList.add('na');
+    detGeneral.textContent = `적용구간: ${bracketLabel}`;
+    detYoung.textContent = `적용구간: ${bracketLabel}`;
+    return;
+  }
+
+  const capGeneral = Math.min(rate, 10);
+  const capYoung = Math.min(rate, 20);
+  const amountGeneral = income * (1 + capGeneral / 100);
+  const amountYoung = income * (1 + capYoung / 100);
+
+  resGeneral.textContent = formatWon(amountGeneral);
+  resGeneral.classList.remove('na');
+  resYoung.textContent = formatWon(amountYoung);
+  resYoung.classList.remove('na');
+
+  detGeneral.innerHTML = `적용구간: <b>${bracketLabel}</b><br>증가율 ${rate.toFixed(1)}% → 적용 ${capGeneral.toFixed(1)}%`;
+  detYoung.innerHTML = `적용구간: <b>${bracketLabel}</b><br>증가율 ${rate.toFixed(1)}% → 적용 ${capYoung.toFixed(1)}%`;
+}
+
+['age','period','income'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calculate);
+});
+calculate();
+</script>
+</body>
+</html>
